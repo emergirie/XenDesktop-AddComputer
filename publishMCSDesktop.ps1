@@ -5,20 +5,26 @@ param(
 	[Parameter(Mandatory = $true)] [string] $UserList
 )
 Add-PSSnapin Citrix.*
-$idPoolName= $ImageName	
-$provSchemeName =$idPoolName
+$IdPoolName= $ImageName	
+$ProvSchemeName =$IdPoolName
 $GroupNameArray = $GroupNameList.Split(",")
 $UserListArray = $UserList.Split(",")
-$machineCount = $GroupNameArray.Count
+
+if($GroupNameArray.Length -ne $UserListArray.Length){
+    echo "groups and user lengths are inconsistent"
+    exit 100
+}
+
+$MachineCount = $GroupNameArray.Count
 $MachineArray = New-Object -TypeName System.Collections.ArrayList
 
 $LogOBJ = Start-LogHighLevelOperation  -AdminAddress $ddc -Source "Studio"  -Text "Add Computer"
 
-$adAccounts = New-AcctADAccount -IdentityPoolName $idPoolName -Count $machineCount
+$adAccounts = New-AcctADAccount -IdentityPoolName $IdPoolName -Count $MachineCount
 
-$vms = New-ProvVm -ProvisioningSchemeName $provSchemeName -ADAccountName $adAccounts.SuccessfulAccounts
+$vms = New-ProvVm -ProvisioningSchemeName $ProvSchemeName -ADAccountName $adAccounts.SuccessfulAccounts
 
-$Catalog = Get-BrokerCatalog -Name $provSchemeName
+$Catalog = Get-BrokerCatalog -Name $ProvSchemeName
 
 foreach ($ADAccount in $vms.CreatedVirtualMachines)
 {
@@ -28,11 +34,11 @@ foreach ($ADAccount in $vms.CreatedVirtualMachines)
 
 Stop-LogHighLevelOperation -HighLevelOperationId $LogOBJ.Id -IsSuccessful $True
 
-for($i=0;$i -lt $machineCount;$i++)
+for($i=0;$i -lt $MachineCount;$i++)
 {
     $NumDesktops = 1
     $peakPoolSize = 2
-    $SrcCatalog = $provSchemeName 
+    $SrcCatalog = $ProvSchemeName 
     $weekendPoolSizeByHour = new-object int[] 24
     $weekdayPoolSizeByHour = new-object int[] 24
     9..17 | %{ $weekdayPoolSizeByHour[$_] = $peakPoolSize } 
