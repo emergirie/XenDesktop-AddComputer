@@ -10,6 +10,11 @@ $ProvSchemeName =$IdPoolName
 $GroupNameArray = $GroupNameList.Split(",")
 $UserListArray = $UserList.Split(",")
 
+if($GroupNameArray.Count -ne  $UserListArray.Count)
+{
+    echo "groups and user lengths are inconsistent"
+    exit 100
+}
 
 $MachineCount = $GroupNameArray.Count
 $MachineArray = New-Object -TypeName System.Collections.ArrayList
